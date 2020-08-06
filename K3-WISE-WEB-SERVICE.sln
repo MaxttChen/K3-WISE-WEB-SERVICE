@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29509.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "K3WISE-WebService", "K3WISE-WebService\K3WISE-WebService.csproj", "{B5058077-C9D1-4B92-B04A-7ABD246C0B96}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoForm", "DemoForm\DemoForm.csproj", "{138D9895-99E0-4999-8AF4-6420248CE513}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B5058077-C9D1-4B92-B04A-7ABD246C0B96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5058077-C9D1-4B92-B04A-7ABD246C0B96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5058077-C9D1-4B92-B04A-7ABD246C0B96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5058077-C9D1-4B92-B04A-7ABD246C0B96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{138D9895-99E0-4999-8AF4-6420248CE513}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{138D9895-99E0-4999-8AF4-6420248CE513}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{138D9895-99E0-4999-8AF4-6420248CE513}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{138D9895-99E0-4999-8AF4-6420248CE513}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BDC9AF51-DA8D-4D8D-B6E1-DFEAAC978CD9}
+	EndGlobalSection
+EndGlobal

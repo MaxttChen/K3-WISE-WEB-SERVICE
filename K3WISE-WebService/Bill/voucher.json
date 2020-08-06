@@ -1,0 +1,117 @@
+{
+  "DB": "AIS20181130154405",
+  "Replace": "false",
+  "VoucherData": {
+    "FAttachments": 0,
+    "FDate": "2020-07-16",
+    "FExplanation": "刘玉兰:2020-07-23报销金额0.0",
+    "FGroup": "记",
+    "FHandler": "",
+    "FNumber": "0",
+    "FPeriod": "07",
+    "FPoster": "NONE",
+    "FCashier": "NONE",
+    "FPreparer": "胡红霞",
+    "FSerialNum": 0,
+    "FReference": "OA-[313463]#",
+    "FTransDate": "2020-07-16",
+    "FVoucherID": "0",
+    "FYear": "2020",
+    "Entries": [
+      {
+        "FAccountName": "制造费用_水电费",
+        "FAccountNumber": "5101.09",
+        "FAmount": "6343.3",
+        "FAmountFor": 6343.3,
+        "FCurrencyName": "人名币",
+        "FCurrencyNumber": "RMB",
+        "FDC": "1",
+        "FEntryID": 0,
+        "FExchangeRate": "1",
+        "FExplanation": "付无锡市瑞灵工自动化控制有限公司:A1焊接车间2020.6月份电费",
+        "FMeasureUnit": "",
+        "FMeasureUnitUUID": "",
+        "FQuantity": "0",
+        "FSettleNo": "",
+        "FSettleTypeName": "",
+        "FTransNo": "",
+        "FUnitPrice": "0",
+        "DetailEntries": [
+          {
+            "FDetailNumber": "07",
+            "FDetailName": "生产部",
+            "FTypeNumber": "002",
+            "FTypeName": "部门"
+          }
+        ]
+      },
+      {
+        "FAccountName": "管理费用_水电费",
+        "FAccountNumber": "6602.10",
+        "FAmount": "1585.83",
+        "FAmountFor": 1585.83,
+        "FCurrencyName": "人名币",
+        "FCurrencyNumber": "RMB",
+        "FDC": "1",
+        "FEntryID": 1,
+        "FExchangeRate": "1",
+        "FExplanation": "付无锡市瑞灵工自动化控制有限公司:A1焊接车间2020.6月份电费",
+        "FMeasureUnit": "",
+        "FMeasureUnitUUID": "",
+        "FQuantity": "0",
+        "FSettleNo": "",
+        "FSettleTypeName": "",
+        "FTransNo": "",
+        "FUnitPrice": "0",
+        "DetailEntries": [
+          {
+            "FDetailNumber": "06",
+            "FDetailName": "人力资源部",
+            "FTypeNumber": "002",
+            "FTypeName": "部门"
+          }
+        ]
+      },
+      {
+        "FAccountName": "应交税费_应交增值税_进项税额",
+        "FAccountNumber": "2221.02.01",
+        "FAmount": "1030.79",
+        "FAmountFor": "1030.79",
+        "FCurrencyName": "人名币",
+        "FCurrencyNumber": "RMB",
+        "FDC": "1",
+        "FEntryID": 2,
+        "FExchangeRate": "1",
+        "FExplanation": "税额结转",
+        "FMeasureUnit": "",
+        "FMeasureUnitUUID": "",
+        "FQuantity": "0",
+        "FSettleNo": "",
+        "FSettleTypeName": "",
+        "FTransNo": "",
+        "FUnitPrice": "0",
+        "DetailEntries": []
+      },
+      {
+        "FAccountName": "银行存款_建行无锡梅村支行4322",
+        "FAccountNumber": "1002.01",
+        "FAmount": "8959.92",
+        "FAmountFor": "8959.92",
+        "FCurrencyName": "人名币",
+        "FCurrencyNumber": "RMB",
+        "FDC": "0",
+        "FEntryID": 3,
+        "FExchangeRate": "1",
+        "FExplanation": "付无锡市瑞灵工自动化控制有限公司制造费用_水电费/管理费用_水电费",
+        "FMeasureUnit": "",
+        "FMeasureUnitUUID": "",
+        "FQuantity": "0",
+        "FSettleNo": "",
+        "FSettleTypeName": "",
+        "FTransNo": "",
+        "FUnitPrice": "0",
+        "DetailEntries": []
+      }
+    ]
+  }
+}

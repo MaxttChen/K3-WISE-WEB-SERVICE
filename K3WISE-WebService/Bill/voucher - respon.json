@@ -1,0 +1,12 @@
+{
+  "StatusCode": 200,
+  "Message": "Successful",
+  "Data": "保存凭证成功",
+  "FVoucherID": 1234
+}
+,
+{
+  "StatusCode": 201,
+  "Message": "Faild",
+  "Data": "凭证数据格式错误"
+}
