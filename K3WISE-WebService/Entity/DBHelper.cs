@@ -12,7 +12,7 @@ namespace K3WISE_WebService.Entity
 
         public static SqlConnection GetConnectionByDBName(string DBName)
         {
-            var conn = "Data Source=193.1.11.159;Initial Catalog="+ DBName + ";User ID=sa;Password=Gdhg_K3&2018^Wise";
+            var conn = "Data Source=193.1.11.159;Initial Catalog="+ DBName + ";User ID=sa;Password=";
             return new SqlConnection(conn);
         }
 
