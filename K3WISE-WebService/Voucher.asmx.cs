@@ -76,10 +76,10 @@ AND FNumber = '{0}'", ve.FCurrencyNumber);
 
 
                         //检查科目
-                        var sql_account = string.Format(@"SELECT A.FNumber+'/'+A.FFullName act,A.FDetailID,IC.FNumber itemClassNumber FROM dbo.t_Account A
-LEFT JOIN dbo.t_ItemDetailV V ON V.FDetailID = A.FDetailID
-LEFT JOIN dbo.t_ItemClass IC ON IC.FItemClassID = V.FItemClassID
-WHERE FDelete=0 AND FDetail = 1 AND A.FNumber = '{0}' ", ve.FAccountNumber);
+                        var sql_account = string.Format(@"SELECT A.FNumber+'/'+A.FFullName act,A.FDetailID,CONVERT(VARCHAR(100),IC.FItemClassID) itemClassNumber FROM dbo.t_Account A
+ LEFT JOIN dbo.t_ItemDetailV V ON V.FDetailID = A.FDetailID
+ LEFT JOIN dbo.t_ItemClass IC ON IC.FItemClassID = V.FItemClassID
+ WHERE FDelete=0 AND FDetail = 1 AND A.FNumber = '{0}' ", ve.FAccountNumber);
                         DataTable dt_account = Entity.DBHelper.FillAlone(sql_account, Entity.DBHelper.GetConnectionByDBName(vj.DB));
                         if (dt_account.Rows.Count <= 0)
                         {
@@ -90,17 +90,17 @@ WHERE FDelete=0 AND FDetail = 1 AND A.FNumber = '{0}' ", ve.FAccountNumber);
                         //明细数目
                         if ( !dt_account.Rows[0]["FDetailID"].ToString().Equals("0") && null!= ve.DetailEntries && dt_account.Rows.Count != ve.DetailEntries.Length)
                         {
-                            erroMsg = "科目核算项目数目和凭证核算项目数目对应不上";
+                            erroMsg = dt_account.Rows[0]["act"].ToString() + "  - 科目核算项目数目和凭证核算项目数目对应不上";
                             break;
                         }
                         if (!dt_account.Rows[0]["FDetailID"].ToString().Equals("0") && null == ve.DetailEntries )
                         {
-                            erroMsg = "科目核算项目数目和凭证核算项目数目对应不上";
+                            erroMsg = dt_account.Rows[0]["act"].ToString() + "  - 科目核算项目数目和凭证核算项目数目对应不上";
                             break;
                         }
                         if (dt_account.Rows[0]["FDetailID"].ToString().Equals("0") && null != ve.DetailEntries && ve.DetailEntries.Length != 0)
                         {
-                            erroMsg = "科目核算项目数目和凭证核算项目数目对应不上";
+                            erroMsg = dt_account.Rows[0]["act"].ToString() + "  - 科目核算项目数目和凭证核算项目数目对应不上";
                             break;
                         }
 
@@ -110,7 +110,7 @@ WHERE FDelete=0 AND FDetail = 1 AND A.FNumber = '{0}' ", ve.FAccountNumber);
                         {
                             var sql_item = string.Format(@"SELECT I.FItemID , IC.FItemClassID FROM dbo.t_Item I(NOLOCK) 
 JOIN dbo.t_ItemClass IC(NOLOCK) ON i.FItemClassID = ic.FItemClassID
-WHERE i.FNumber = '{0}' AND ic.FNumber = '{1}'", ve.DetailEntries[j].FDetailNumber, ve.DetailEntries[j].FTypeNumber);
+WHERE i.FNumber = '{0}' AND ic.FItemClassID = {1}", ve.DetailEntries[j].FDetailNumber, ve.DetailEntries[j].FTypeNumber);
                             DataTable dt_item = Entity.DBHelper.FillAlone(sql_item, Entity.DBHelper.GetConnectionByDBName(vj.DB));
                             if (dt_item.Rows.Count <= 0 )
                             {
@@ -123,7 +123,8 @@ WHERE i.FNumber = '{0}' AND ic.FNumber = '{1}'", ve.DetailEntries[j].FDetailNumb
                             //检查核算项目和科目的核算项目是否对应
                             for (int i = 0, len = dt_account.Rows.Count; i < len; i++)
                             {
-                                if (dt_account.Rows[i]["itemClassNumber"].ToString().Equals(ve.DetailEntries[j].FTypeNumber))
+                                if (!dt_account.Rows[i]["itemClassNumber"].ToString().Equals("") && Convert.ToInt16(dt_account.Rows[i]["itemClassNumber"].ToString()) == 
+                                    (string.IsNullOrEmpty(ve.DetailEntries[j].FTypeNumber) ? 0 : Convert.ToInt16(ve.DetailEntries[j].FTypeNumber) ))
                                 {
                                     dt_account.Rows[i]["itemClassNumber"] = "";
                                 }
@@ -134,7 +135,7 @@ WHERE i.FNumber = '{0}' AND ic.FNumber = '{1}'", ve.DetailEntries[j].FDetailNumb
                         {
                             if (!dt_account.Rows[i]["itemClassNumber"].ToString().Equals(""))
                             {
-                                erroMsg = "缺少科目对应核算项目：" + dt_account.Rows[i]["itemClassNumber"].ToString();
+                                erroMsg = dt_account.Rows[i]["act"].ToString() + "  - 缺少科目对应核算项目：" + dt_account.Rows[i]["itemClassNumber"].ToString();
                                 break;
                             }
                         }
@@ -151,9 +152,6 @@ WHERE i.FNumber = '{0}' AND ic.FNumber = '{1}'", ve.DetailEntries[j].FDetailNumb
 
                 var ves = vj.VoucherData.Entries;
                 //写入数据
-
-                //开启事务
-                transaction = connection.BeginTransaction();
 
                 //确认voucherid最大值
                 string FVoucherID = "";
@@ -180,12 +178,12 @@ DELETE FROM dbo.t_VoucherEntry WHERE FVoucherID='{0}'
                 {
                     if (null != ves[i].DetailEntries && ves[i].DetailEntries.Length > 0 && ves[i].FDetailID.Equals("0") )
                     {
-                        var sql_detail_where = " where 1=1 ";
+                        var sql_detail_where = string.Format(@" where 1=1 AND FDetailCount = {0}  ", ves[i].DetailEntries.Length.ToString()) ;
 
                         //找出FDetailID，如果没有则新增
                         foreach(var vei in ves[i].DetailEntries)
                         {
-                            sql_detail_where += "AND F" + vei.FItemClassID + "=" + vei.FItemID;
+                            sql_detail_where += "  AND F" + vei.FItemClassID + "=" + vei.FItemID;
                         }
                         var sql_detail = "SELECT FDetailID FROM dbo.t_ItemDetail " + sql_detail_where;
                         DataTable dt_detail = Entity.DBHelper.FillAlone(sql_detail, Entity.DBHelper.GetConnectionByDBName(vj.DB));
@@ -213,7 +211,8 @@ DELETE FROM dbo.t_VoucherEntry WHERE FVoucherID='{0}'
                                     }
                                 }
                             }
-                            
+
+                            transaction = connection.BeginTransaction();
                             //获取最大FDetailID
                             var sql_detailid_max = @"SELECT ISNULL(MAX(FDetailID),0) + 1 AS FDetailID FROM dbo.t_ItemDetail where 1=1 ";
                             DataTable dt_detailid_max = Entity.DBHelper.FillAlone(sql_detailid_max, Entity.DBHelper.GetConnectionByDBName(vj.DB));
@@ -255,6 +254,7 @@ VALUES
 
                             //数据库执行插入ItemDetail
                             Entity.DBHelper.Query(sql_insert_detailv+ sql_insert_detail,connection,transaction);
+                            transaction.Commit();
 
                             ves[i].FDetailID = FDetailID;
                         }
@@ -264,8 +264,8 @@ VALUES
                 }
 
 
-                
 
+                transaction = connection.BeginTransaction();
                 string sql_insert_t_voucherEntry = "";
                 //插入t_vocuherentry表
                 for(int i = 0, len = ves.Length; i < len; i++)
@@ -321,8 +321,8 @@ JOIN (SELECT FVoucherID,SUM(FAmountFor) FAmountFor FROM t_VoucherEntry ve WHERE 
 , FVoucherID
 );
 
-                Entity.DBHelper.Query(sql_insert_t_voucherEntry,connection,transaction);
-                Entity.DBHelper.Query(sql_insert_t_voucher, connection, transaction);
+                Entity.DBHelper.Query(sql_insert_t_voucherEntry + "  " + sql_insert_t_voucher, connection,transaction);
+                //Entity.DBHelper.Query(sql_insert_t_voucher, connection, transaction);
 
                 transaction.Commit();
                 //返回值
@@ -373,7 +373,7 @@ JOIN (SELECT FVoucherID,SUM(FAmountFor) FAmountFor FROM t_VoucherEntry ve WHERE 
             HttpContext.Current.Response.Write(@"{
   ""StatusCode"": 201,
   ""Message"": ""Faild"",
-  ""Data"": ""凭证数据格式错误"" "+ Msg + @"
+  ""Data"": ""凭证数据格式错误 "+ Msg + @" ""
 }");
         }
     }
