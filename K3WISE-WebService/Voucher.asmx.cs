@@ -69,7 +69,7 @@ JOIN t_SystemProfile t2 ON t2.FCategory = t1.FCategory AND t2.FKey = 'CurrentPer
 WHERE 1=1AND t1.FCategory = 'GL' AND  t1.FKey = 'CurrentYear'
 AND CONVERT(INT,t1.FValue) <= CONVERT(INT,'{0}') AND CONVERT(INT,t2.FValue) <= CONVERT(INT,'{1}')
 ", vj.VoucherData.FYear, vj.VoucherData.FPeriod);
-                if (Entity.DBHelper.Exists(sql_CheckDate, connection) <= 0)
+                if (Entity.DBHelper.Fill(sql_CheckDate, connection).Rows.Count <= 0)
                 {
                     erroMsg = vj.VoucherData.FYear + "-" + vj.VoucherData.FPeriod + ":凭证会计期间小于结账日期！";
                 }
