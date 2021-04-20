@@ -5,6 +5,8 @@ using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Web;
+using System.Web.Script.Serialization;
+using System.Web.Script.Services;
 using System.Web.Services;
 using K3WISE_WebService.Bill;
 using Newtonsoft.Json;
@@ -59,6 +61,19 @@ namespace K3WISE_WebService
                 {
                     erroMsg = vj.VoucherData.FPreparer + "制单人不存在！";
                 }
+
+                //检查是否会计期间
+                var sql_CheckDate = String.Format(@"
+SELECT t1.FKey key1 ,t1.FValue CurrentYearVal , t2.FKey key2, t2.FValue CurrentPeriodVal  FROM dbo.t_SystemProfile t1
+JOIN t_SystemProfile t2 ON t2.FCategory = t1.FCategory AND t2.FKey = 'CurrentPeriod'
+WHERE 1=1AND t1.FCategory = 'GL' AND  t1.FKey = 'CurrentYear'
+AND CONVERT(INT,t1.FValue) <= CONVERT(INT,'{0}') AND CONVERT(INT,t2.FValue) <= CONVERT(INT,'{1}')
+", vj.VoucherData.FYear, vj.VoucherData.FPeriod);
+                if (Entity.DBHelper.Exists(sql_CheckDate, connection) <= 0)
+                {
+                    erroMsg = vj.VoucherData.FYear + "-" + vj.VoucherData.FPeriod + ":凭证会计期间小于结账日期！";
+                }
+
 
                 if (string.IsNullOrEmpty(erroMsg))
                 {
@@ -131,6 +146,12 @@ WHERE i.FNumber = '{0}' AND ic.FItemClassID = {1}", ve.DetailEntries[j].FDetailN
                             }
                         }
 
+                        if (!string.IsNullOrEmpty(erroMsg))
+                        {
+                            ResponError(erroMsg);
+                            return;
+                        }
+
                         for (int i = 0, len = dt_account.Rows.Count; i < len && !dt_account.Rows[0]["FDetailID"].ToString().Equals("0"); i++)
                         {
                             if (!dt_account.Rows[i]["itemClassNumber"].ToString().Equals(""))
@@ -159,12 +180,19 @@ WHERE i.FNumber = '{0}' AND ic.FItemClassID = {1}", ve.DetailEntries[j].FDetailN
                 DataTable dt_max_FVoucherID = Entity.DBHelper.FillAlone(sql_max_FVoucherID, Entity.DBHelper.GetConnectionByDBName(vj.DB));
                 FVoucherID = dt_max_FVoucherID.Rows[0]["MAXID"].ToString();
 
+                //获取凭证号
+                string VoucherFNumber = "0";
+                
+
                 //是否覆盖--获取凭证ID
                 FVoucherID = vj.Replace ? vj.VoucherData.FVoucherID.ToString() : FVoucherID;
                 if (vj.Replace)
                 {
                     FVoucherID = vj.VoucherData.FVoucherID.ToString();
 
+                    string sql_voucher_number = string.Format("SELECT FNumber  FROM dbo.t_Voucher where FVoucherID =  {0}", FVoucherID);
+                    DataTable dt_voucher_number = Entity.DBHelper.FillAlone(sql_voucher_number, Entity.DBHelper.GetConnectionByDBName(vj.DB));
+                    VoucherFNumber = dt_voucher_number.Rows.Count > 0 ? dt_voucher_number.Rows[0][0].ToString() : "0";
                     //删除凭证
                     string sql_delete = String.Format(@"
 DELETE FROM dbo.t_Voucher WHERE FVoucherID='{0}'
@@ -204,6 +232,7 @@ DELETE FROM dbo.t_VoucherEntry WHERE FVoucherID='{0}'
                                     if(dt_t_ItemDetail.Columns[j].ColumnName.Equals("F" + vei.FItemClassID.ToString()))
                                     {
                                         dr[j] = vei.FItemID;
+                                        break;
                                     }
                                     else
                                     {
@@ -263,6 +292,8 @@ VALUES
 
                 }
 
+                
+
 
 
                 transaction = connection.BeginTransaction();
@@ -299,12 +330,12 @@ INSERT INTO dbo.t_Voucher
 		, FCheckerID, FPosterID, FCashierID, FHandler, FOwnerGroupID, FObjectName, FParameter, FSerialNum, FTranType, FTransDate, FFrameWorkID, FApproveID, FFootNote, UUID
 	)SELECT
 	'0', {6}, '{2}', YEAR('{2}'), MONTH('{2}'), VG.FGroupID, 
-(
+CASE WHEN '{7}'='0' THEN (
 Select ISNULL(MAX(FNumber),0) + 1
  From (select FNumber,FYear,FPeriod,FGroupID from t_Voucher  
  Union all select FNumber,FYear,FPeriod,FGroupID from t_VoucherBlankout) a  
  Where FYear= YEAR('{2}') AND FPeriod=  MONTH('{2}') and FGroupID = VG.FGroupID
-)
+) ELSE '{7}' END
 , '{3}', '{4}', 0, {5}, ve.FAmountFor, ve.FAmountFor, NULL, 0, 0, U.FUserID, -1, -1, -1, NULL, 0, NULL, NULL, (SELECT ISNULL(MAX(FSerialNum),0)+1 FROM dbo.t_Voucher), 0
 	, '{2}', -1, -1, '', NEWID()
 	FROM dbo.t_User U 
@@ -319,7 +350,11 @@ JOIN (SELECT FVoucherID,SUM(FAmountFor) FAmountFor FROM t_VoucherEntry ve WHERE 
 , vj.VoucherData.FExplanation
 , vj.VoucherData.Entries.Length
 , FVoucherID
+, VoucherFNumber
 );
+                //更新对方科目accountid2
+                string sql_update_accountid2 = string.Format(@"  EXEC UPDATE_VOUCHERENTRY_ACCOUNTID2 {0}  ", FVoucherID);
+
 
                 Entity.DBHelper.Query(sql_insert_t_voucherEntry + "  " + sql_insert_t_voucher, connection,transaction);
                 //Entity.DBHelper.Query(sql_insert_t_voucher, connection, transaction);
@@ -354,27 +389,46 @@ JOIN (SELECT FVoucherID,SUM(FAmountFor) FAmountFor FROM t_VoucherEntry ve WHERE 
 
         private void Respon(string json)
         {
-            HttpContext.Current.Response.HeaderEncoding = System.Text.Encoding.UTF8;
-            HttpContext.Current.Response.ContentType = "application/x-javascript";
-            HttpContext.Current.Response.Charset = "utf-8";
-            HttpContext.Current.Response.Write(@"{
+            String res = @"{
+  ""flag"": true,
   ""StatusCode"": 200,
   ""Message"": ""Successful"",
   ""Data"": ""保存凭证成功"",
-  ""FVoucherID"": "+ json + @"
-}");
+  ""FVoucherID"": " + json + @"
+}";
+            Context.Response.Clear();
+            Context.Response.StatusCode = 200;
+            Context.Response.Status = "200 OK";
+            Context.Response.HeaderEncoding = System.Text.Encoding.UTF8;
+            Context.Response.AddHeader("content-length", System.Text.Encoding.UTF8.GetBytes(res).Length.ToString());
+            Context.Response.ContentType = "application/text";
+            Context.Response.Charset = "utf-8";
+            Context.Response.Write(res);
+            Context.Response.Flush();
+            HttpContext.Current.ApplicationInstance.CompleteRequest();
+
         }
 
         private void ResponError(string Msg)
         {
-            HttpContext.Current.Response.HeaderEncoding = System.Text.Encoding.UTF8;
-            HttpContext.Current.Response.ContentType = "application/x-javascript";
-            HttpContext.Current.Response.Charset = "utf-8";
-            HttpContext.Current.Response.Write(@"{
+            String res = @"{
+  ""flag"": false,
   ""StatusCode"": 201,
-  ""Message"": ""Faild"",
-  ""Data"": ""凭证数据格式错误 "+ Msg + @" ""
-}");
+  ""Message"": ""Faild: " + Msg + @""",
+  ""Data"": ""凭证数据格式错误 " + Msg + @" ""
+}";
+            Context.Response.Clear();
+            Context.Response.StatusCode = 200;
+            Context.Response.Status = "200 OK";
+            Context.Response.HeaderEncoding = System.Text.Encoding.UTF8;
+            Context.Response.AddHeader("content-length", System.Text.Encoding.UTF8.GetBytes(res).Length.ToString());
+            Context.Response.ContentType = "application/text";
+            Context.Response.Charset = "utf-8";
+            Context.Response.Write(res);
+            Context.Response.Flush();
+            HttpContext.Current.ApplicationInstance.CompleteRequest();
+
         }
+
     }
 }
